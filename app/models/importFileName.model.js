@@ -9,7 +9,7 @@ const ImportFileName = function (ImpFN) {
 };
 
 ImportFileName.create = (newImportFileName, result) => {
-    sql.query("INSERT INTO ImportFileName SET ?", newImportFileName, (err, res) => {
+    sql.query("INSERT INTO `EakWServerDB`.`ImportFileName` SET ?", newImportFileName, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(err, null);
@@ -22,7 +22,7 @@ ImportFileName.create = (newImportFileName, result) => {
 };
 
 ImportFileName.findById = (id, result) => {
-    sql.query(`SELECT * FROM ImportFileName WHERE id = ${id}`, (err, res) => {
+    sql.query(`SELECT * FROM EakWServerDB.ImportFileName WHERE id = ${id}`, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(err, null);
@@ -41,7 +41,7 @@ ImportFileName.findById = (id, result) => {
 };
 
 ImportFileName.getAll = (ImpFileName, result) => {
-    let query = "SELECT * FROM ImportFileName";
+    let query = "SELECT * FROM EakWServerDB.ImportFileName";
 
     if (ImpFileName) {
         query += ` WHERE ImpFileName LIKE '%${ImpFileName}%'`;
@@ -60,7 +60,7 @@ ImportFileName.getAll = (ImpFileName, result) => {
 };
 
 ImportFileName.getImpFileName = (ImpFileName, result) => {
-    let query = "SELECT * FROM ImportFileName WHERE ImpFileName LIKE " `'%${ImpFileName}%'`;
+    let query = "SELECT * FROM EakWServerDB.ImportFileName WHERE ImpFileName LIKE " `'%${ImpFileName}%'`;
 
     sql.query(query, (err, res) => {
         if (err) {

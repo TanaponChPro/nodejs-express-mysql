@@ -6,7 +6,7 @@ const Band = function (band) {
 };
 
 Band.getAll = (bandname, result) => {
-    let query = "SELECT * FROM Band";
+    let query = "SELECT * FROM `EakWServerDB`.`band`";
 
     if (bandname) {
         query += ` WHERE BandName LIKE '%${bandname}%'`;
