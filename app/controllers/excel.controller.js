@@ -20,7 +20,7 @@ const upload = async (req, res) => {
                 customers.push([row[1],row[2],row[3]]);
             });
 
-            let query = 'INSERT INTO customer (name, address, age) VALUES ?';
+            let query = 'INSERT INTO EakWServerDB.customer (name, address, age) VALUES ?';
             sql.query(query, [customers], (err, res) => {
                 if (err) throw err;
                 console.log("Number of records inserted: " + res.affectedRows);
