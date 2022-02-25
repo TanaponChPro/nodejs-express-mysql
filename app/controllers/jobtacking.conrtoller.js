@@ -1,3 +1,4 @@
+// var path = require('path');
 const connect = require("../models/db.js");
 const readXlsxFile = require("read-excel-file/node");
 
@@ -6,12 +7,15 @@ const upload = async (req, res) => {
         if (req.file == undefined) {
             return res.status(400).send("Please upload an excel file!");
         }
-        let path = __basedir + "/app/inputfiles/" + req.file.filename;
-        console.log(path);
+        let pathfile = __basedir + "/app/inputfiles/" + req.file.filename;
+        console.log(pathfile);
+        // console.log(req.file.originalname);
 
-        sheetTechnician(path);
-        sheetVendor(path);
-        sheetCloseJob(path);
+        let orgFileName = req.file.originalname;
+        saveImportFileName(orgFileName, 'loginname');
+        sheetTechnician(pathfile, orgFileName, 'loginname');
+        sheetVendor(pathfile, orgFileName, 'loginname');
+        sheetCloseJob(pathfile, orgFileName, 'loginname');
         res.status(200).send({ message: "upload file to database complete!" });
 
     } catch (error) {
@@ -52,15 +56,12 @@ const getData = (req, res) => {
     // res.json({ message: "Welcome to JobTacking" });
 };
 
-
-
-function sheetTechnician(filePath) {
+function sheetTechnician(filePath, tmpFileName, tmpLoginName) {
     readXlsxFile(filePath, { sheet: '1-ช่างทำงาน' }).then((rows) => {
         //console.table(rows);
         rows.shift();
         let jobtackings = [];
-        let today = new Date()
-        today.toISOString().split('T')[0]
+        let today = new Date();
 
         rows.forEach((row) => {
             if ((row[0] === null) || (row[1] === null)) {
@@ -68,16 +69,16 @@ function sheetTechnician(filePath) {
             } else {
                 jobtackings.push([
                     row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], 
-                    today, 'onTech','Admin-test', 'JobTacking_0.xlsx', '1-ช่างทำงาน'
+                    today, 'onTech',tmpLoginName, tmpFileName, '1-ช่างทำงาน'
                 ]);
             }
         });
-        console.log(jobtackings);
+        // console.log(jobtackings);
 
-        let query = "INSERT INTO jobtacking ("
+        let query = "INSERT INTO EakWServerDB.jobtacking ("
         query += "`JobNumber`,`TID`,`SerialNoEDC`,`SerialNoBase`,`Accessory`,`Remark`,`TechnicName`,`TackDate`,";
         query += "`RecordDateTime`,`LastStatus`,`AdminName`,`ImpFileName`,`SheetName`";
-        query += ") VALUES ?";
+        query += ") VALUES  ? ";
         connect.query(query, [jobtackings], (err, res) => {
             if (err) throw err;
             console.log("INSERT INTO jobtacking from sheet 1-ช่างทำงาน, Number of records inserted: " + res.affectedRows);
@@ -85,13 +86,12 @@ function sheetTechnician(filePath) {
     });
 };
 
-function sheetVendor(filePath) {
+function sheetVendor(filePath, tmpFileName, tmpLoginName) {
     readXlsxFile(filePath, { sheet: '2-คืนเครือง-vendor' }).then((rows) => {
         //console.table(rows);
         rows.shift();
         let jobtackings = [];
-        let today = new Date()
-        today.toISOString().split('T')[0]
+        let today = new Date();
 
         rows.forEach((row) => {
             if ((row[0] === null) || (row[1] === null)) {
@@ -99,17 +99,17 @@ function sheetVendor(filePath) {
             } else {
                 let accessory = "battery: " + row[7] + "| AD+AC: " + row[8] + "| สภาพเครือง: " + row[9] + "| ส่ายต่อพวง:" + row[10];
                 jobtackings.push([
-                    row[1], row[2], row[3], row[4], row[5], row[6], 
-                    accessory, today, 'onVender','Admin-test', 'JobTacking_0.xlsx', '2-คืนเครือง-vendor'
+                    row[2], row[1], row[3], row[4], row[5], row[6], 
+                    accessory, today, 'onVender',tmpLoginName, tmpFileName, '2-คืนเครือง-vendor'
                 ]);
             }
         });
         //console.log(jobtackings);
 
-        let query = "INSERT INTO jobtacking (`JobNumber`,`TID`,";
+        let query = "INSERT INTO EakWServerDB.jobtacking (`JobNumber`,`TID`,";
         query += "`SerialNoEDC`,`SerialNoBase`,`SerialNoPinpad`,`SerialNoScanner`,";
         query += "`Accessory`,`RecordDateTime`,`LastStatus`,`AdminName`,`ImpFileName`,`SheetName`";
-        query += ") VALUES ?";
+        query += ") VALUES  ? ";
         connect.query(query, [jobtackings], (err, res) => {
             if (err) throw err;
             console.log("INSERT INTO jobtacking from sheet 2-คืนเครือง-vendor, Number of records inserted: " + res.affectedRows);
@@ -117,13 +117,12 @@ function sheetVendor(filePath) {
     });
 };
 
-function sheetCloseJob(filePath) {
+function sheetCloseJob(filePath, tmpFileName, tmpLoginName) {
     readXlsxFile(filePath, { sheet: '3-ปิดงานช่าง' }).then((rows) => {
         //console.table(rows);
         rows.shift();
         let jobtackings = [];
         let today = new Date()
-        today.toISOString().split('T')[0]
 
         rows.forEach((row) => {
             if ((row[0] === null) || (row[1] === null)) {
@@ -156,20 +155,20 @@ function sheetCloseJob(filePath) {
                     row[18], row[19],                                                   // return sim, install sim
                     row[21], row[23], row[24],                                          // TechnicName, Date, Time,
                     accessory, row[27], row[28], row[29],                               // ResultCode, Remark, Note
-                    today, laststatus, 'Admin-test', 'JobTacking_0.xlsx', '3-ปิดงานช่าง'
+                    today, laststatus, tmpLoginName, tmpFileName, '3-ปิดงานช่าง'
                 ]);
             }
         });
         //console.log(jobtackings);
 
-        let query = "INSERT INTO jobtacking (";
+        let query = "INSERT INTO EakWServerDB.jobtacking (";
         query += "`JobNumber`,`TID`,`Bank`,`Contact`,`PhoneNo`,";
         query += "`SerialNoEDC`,`SerialNoBase`,`SerialNoPinpad`,`SerialNoScanner`,`SerialNoHub`,";
         query += "`ReturnNoEDC`,`ReturnNoBase`,`ReturnNoPinpad`,`ReturnNoScanner`,`ReturnNoHub`,";
         query += "`SerialNoSim`,`ReturnNoSim`,";
         query += "`TechnicName`,`TackDate`,`TackTime`,";
         query += "`Accessory`,`ResultCode`,`Remark`,`Comment`,";
-        query += "`RecordDateTime`,`LastStatus`,`AdminName`,`ImpFileName`,`SheetName`) VALUES ?";
+        query += "`RecordDateTime`,`LastStatus`,`AdminName`,`ImpFileName`,`SheetName`) VALUES  ? ";
 
         connect.query(query, [jobtackings], (err, res) => {
             if (err) throw err;
@@ -214,6 +213,22 @@ const showSubString = (req, res) => {
     });
     //res.json(dumArray);
     res.status(200).send({ message: "upload file to database complete!" });
+};
+
+function saveImportFileName(tmpFileName, tmpLoginName){
+    
+    let today = new Date()
+    let date = ("0" + today.getDate()).slice(-2);
+    let month = ("0" + (today.getMonth() + 1)).slice(-2);
+    let year = today.getFullYear();
+    let impDate = year + "-" + month + "-" + date;
+    let jobtackings = [tmpFileName,tmpLoginName,impDate,'N'];
+    let query = "INSERT INTO EakWServerDB.ImportFileName ( `ImpFileName`, `UserLogin`, `ImportDate`, `TrantoJobImport` )  VALUES ( ? )";
+
+    connect.query(query, [jobtackings], (err, res) => {
+        if (err) throw err;
+        console.log("INSERT INTO ImportFileName Number of records inserted: " + res.affectedRows);
+    });
 };
 
 module.exports = {

@@ -26,6 +26,9 @@ require("./app/routes/band.routes.js")(app);
 require("./app/routes/customer.routes.js")(app);
 require("./app/routes/importfilename.routes.js")(app);
 require("./app/routes/jobtacking.routes.js")(app);
+require("./app/routes/employee.routes.js")(app);
+require("./app/routes/device.routes.js")(app);
+require("./app/routes/dashb-jobstatus.routes.js")(app);
 app.listen();
 
 // set port, listen for requests
