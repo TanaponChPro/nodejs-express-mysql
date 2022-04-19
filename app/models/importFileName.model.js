@@ -1,4 +1,4 @@
-const sql = require("./db.js");
+const connect = require("./db.js");
 
 // constructor
 const ImportFileName = function (ImpFN) {
@@ -9,7 +9,7 @@ const ImportFileName = function (ImpFN) {
 };
 
 ImportFileName.create = (newImportFileName, result) => {
-    sql.query("INSERT INTO `EakWServerDB`.`ImportFileName` SET ?", newImportFileName, (err, res) => {
+    connect.query("INSERT INTO `EakWServerDB`.`ImportFileName` SET ?", newImportFileName, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(err, null);
@@ -22,7 +22,7 @@ ImportFileName.create = (newImportFileName, result) => {
 };
 
 ImportFileName.findById = (id, result) => {
-    sql.query(`SELECT * FROM EakWServerDB.ImportFileName WHERE id = ${id}`, (err, res) => {
+    connect.query(`SELECT * FROM EakWServerDB.ImportFileName WHERE id = ${id}`, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(err, null);
@@ -41,13 +41,13 @@ ImportFileName.findById = (id, result) => {
 };
 
 ImportFileName.getAll = (ImpFileName, result) => {
-    let query = "SELECT * FROM EakWServerDB.ImportFileName";
+    let sql = "SELECT * FROM EakWServerDB.ImportFileName";
 
     if (ImpFileName) {
-        query += ` WHERE ImpFileName LIKE '%${ImpFileName}%'`;
+        sql += ` WHERE ImpFileName LIKE '%${ImpFileName}%'`;
     }
 
-    sql.query(query, (err, res) => {
+    connect.query(sql, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(null, err);
@@ -59,23 +59,41 @@ ImportFileName.getAll = (ImpFileName, result) => {
     });
 };
 
-ImportFileName.getImpFileName = (ImpFileName, result) => {
-    let query = "SELECT * FROM EakWServerDB.ImportFileName WHERE ImpFileName LIKE " `'%${ImpFileName}%'`;
+ImportFileName.getImportFileNameByName = (ImpFileName, result) => {
+    let sql = `SELECT * FROM EakWServerDB.ImportFileName WHERE ImpFileName LIKE '%${ImpFileName}%'`;
 
-    sql.query(query, (err, res) => {
+   console.log("tmp: "+ ImpFileName);
+
+    connect.query(sql, (err, res) => {
         if (err) {
             console.log("error: ", err);
             result(null, err);
             return;
         }
 
-        console.log("ImportFileName: ", res);
+        // console.log("ImportFileName: ", res);
         result(null, res);
     });
 };
 
+ImportFileName.getImpFileNameByStatus = (tmp, result) => {
+    let sql = "SELECT * FROM EakWServerDB.ImportFileName WHERE TrantoJobImport = '"+ tmp +"'";
+
+    // console.log("tmp: "+ tmp.length + ", sql: ", sql);
+
+    connect.query(sql, (err, res) => {
+        if (err) {
+            console.log("error: ", err);
+            result(null, err);
+            return;
+        }
+
+        // console.log("ImportFileName: ", res);
+        result(null, res);
+    });
+};
 ImportFileName.updateById = (id, ImpFN, result) => {
-    sql.query(
+    connect.query(
         "UPDATE ImportFileName SET ImpFileName = ?, UserLogin = ?, ImportDate = ?, TrantoJobImport = ? WHERE id = ?",
         [ImpFN.ImpFileName, ImpFN.UserLogin, ImpFN.ImportDate, ImpFN.TrantoJobImport, id],
         (err, res) => {

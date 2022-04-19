@@ -18,8 +18,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // simple route
 app.get("/", (req, res) => {
-    res.json({ message: "Welcome to bezkoder application." });
+    res.json({ message: "Welcome to Eak and W application." });
 });
+
+// Function to serve all static files
+// inside public directory.
+// app.use(express.static('app')); 
+app.use('/images', express.static('app/images'));
 
 require("./app/routes/tutorial.routes.js")(app);
 require("./app/routes/band.routes.js")(app);
@@ -29,6 +34,9 @@ require("./app/routes/jobtacking.routes.js")(app);
 require("./app/routes/employee.routes.js")(app);
 require("./app/routes/device.routes.js")(app);
 require("./app/routes/dashb-jobstatus.routes.js")(app);
+require("./app/routes/closejob.routes.js")(app);
+require("./app/routes/closejobimg.routes.js")(app);
+require("./app/routes/jobtackingbps.routes.js")(app);
 app.listen();
 
 // set port, listen for requests

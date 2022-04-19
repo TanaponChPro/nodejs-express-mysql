@@ -18,7 +18,7 @@ exports.create = (req, res) => {
         Address2: req.body.Address2,
         LoginName: req.body.LoginName,
         LoginPassword: req.body.LoginPassword,
-        EmployeeRight: req.body.EmployeeRight  
+        EmployeeRight: req.body.EmployeeRight
     });
 
     // Save Tutorial in the database
@@ -71,22 +71,19 @@ exports.update = (req, res) => {
 
     console.log(req.body);
 
-    Employee.updateById(
-        req.params.id,
-        new Employee(req.body),
-        (err, data) => {
-            if (err) {
-                if (err.kind === "not_found") {
-                    res.status(404).send({
-                        message: `Not found Employee with id ${req.params.id}.`
-                    });
-                } else {
-                    res.status(500).send({
-                        message: "Error updating Employee with id " + req.params.id
-                    });
-                }
-            } else res.send(data);
-        }
+    Employee.updateById(req.params.id, new Employee(req.body), (err, data) => {
+        if (err) {
+            if (err.kind === "not_found") {
+                res.status(404).send({
+                    message: `Not found Employee with id ${req.params.id}.`
+                });
+            } else {
+                res.status(500).send({
+                    message: "Error updating Employee with id " + req.params.id
+                });
+            }
+        } else res.send(data);
+    }
     );
 };
 

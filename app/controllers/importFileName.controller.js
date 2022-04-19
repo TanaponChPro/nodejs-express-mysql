@@ -58,15 +58,25 @@ exports.findOne = (req, res) => {
 };
 
 exports.findImpFileName = (req, res) => {
-    ImportFileName.getImpFileName((err, data) => {
+    ImportFileName.getImportFileNameByName((err, data) => {
         if (err)
             res.status(500).send({
-                message:
-                    err.message || "Some error occurred while retrieving ImportFileNames."
+                message:  err.message || "Some error occurred while retrieving ImportFileNames."
             });
         else res.send(data);
     });
 };
+
+exports.findImportFileNamebyStatus = (req, res) => {
+    ImportFileName.getImpFileNameByStatus(req.params.tmp, (err, data) => {
+        if (err)
+            res.status(500).send({
+                message:  err.message || "Some error occurred while retrieving ImportFileNames."
+            });
+        else res.send(data);
+    });
+};
+
 
 exports.update = (req, res) => {
     // Validate Request

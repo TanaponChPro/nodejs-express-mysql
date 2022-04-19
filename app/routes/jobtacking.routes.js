@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const jobController = require("../controllers/jobtacking.conrtoller");
+const jobController = require("../controllers/jobtacking.controller");
 const upload = require("../middlewares/upload.js");
 
 let routes = (app) => {

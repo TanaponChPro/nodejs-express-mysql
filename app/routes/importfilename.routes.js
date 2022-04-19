@@ -10,7 +10,10 @@ module.exports = app => {
     router.get("/", ImportFileName.findAll);
 
     // Retrieve all published ImportFileNames
-    router.get("/ImpFileName", ImportFileName.findImpFileName);
+    router.get("/", ImportFileName.findImpFileName);
+
+    // Retrieve all published ImportFileNames
+    router.get("/status/:tmp", ImportFileName.findImportFileNamebyStatus);
 
     // Retrieve a single ImportFileName with id
     router.get("/:id", ImportFileName.findOne);
