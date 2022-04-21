@@ -193,7 +193,7 @@ const ProcessRunBackend = async (req, res) => {
     try {
         let = sql = ""
         sql += " SELECT ImpFileName, DATE_FORMAT(ImportDate,'%Y-%m-%d') AS ImpDate  "
-        sql += " FROM `EakWServerDB`.`importfilename` "
+        sql += " FROM `EakWServerDB`.`ImportFileName` "
         sql += " WHERE TrantoJobImport = 'N'"
         const result = await get_mysql_data(sql)
         for (const ir in result) {
@@ -267,16 +267,27 @@ var insertJobImportBPS = (pamFileName, pamImpDate) => {
     sql += "     `MERID_MULTI`,`TID_DCC`,`ORG_MERID_DCC`,`Line1`,`Line2`,`Line3`,`Remark`,`ReaderType`, `AssignTo`,`SerialNoPinpad`,"
     sql += "     `SerialNoBase`,`LinkPOS`,`SerialNoSam`,`SerialNoHub`,`VersionEDC`,`VersionPinpad`, `NoteBPS`,`BussinessGroup`,"
     sql += "     `ProjectType`,`JobType`,`Province`,`BKK_UPC`,`SLAStatus`,`Bank`, "
-    sql += "     CONVERT(`OperationDate`,DATE) AS `OperationDate`,`OperationTime`,"
+
+//    sql += "     STR_TO_DATE(`OperationDate`,'%Y-%m-%d') AS `OperationDate`,"
+    sql += "     if(cast(substr(`OperationDate`,1,2) AS UNSIGNED) > 20, null, SUBSTRING_INDEX(`OperationDate`, ' ', 1)) AS `OperationDate`,"
+    sql += "     `OperationTime`,"
+
     sql += "     `CustomerName`,`CustomerPhone`,"
     sql += "     `TechnicName`,`JobStatus`,`Remark2`,`Remark3`, "
-    sql += "     CONVERT(`ReturnDate`,DATE) AS `ReturnDate`,`ReturnTID`,"
+    sql += "     `ReturnDate`,`ReturnTID`,"
     sql += "     `ReturnSIM`,`ReturnSAM`,`NoteOutsource`, "
-    sql += "     CONVERT(`AppointDate`,DATE) AS `AppointDate`,`AppointTime`,"
-    sql += "     CONVERT(`PhonetoCustomerDate`,DATE) AS `PhonetoCustomerDate`,`PhonetoCustomerTime`,"
+
+    // sql += "     CONVERT(`AppointDate`,DATE) AS `AppointDate`,`AppointTime`,"
+    sql += "     if(cast(substr(`ReturnDate`,1,2) AS UNSIGNED) > 20, null, SUBSTRING_INDEX(`ReturnDate`, ' ', 1)) AS `ReturnDate`,"
+    sql += "     `AppointTime`,"
+
+    // sql += "     CONVERT(`PhonetoCustomerDate`,DATE) AS `PhonetoCustomerDate`,`PhonetoCustomerTime`,"
+    sql += "     if(cast(substr(`AppointDate`,1,2) AS UNSIGNED) > 20, null, SUBSTRING_INDEX(`AppointDate`, ' ', 1)) AS `AppointDate`,"
+    sql += "     `PhonetoCustomerTime`,"
+
     sql += "     `AppointResult`,`AppointCount`, `AppointUser`,`SLADateCount`,`SLAMeet1`,"
     sql += "     `SLAinstallEDC`,`AppointDateCount`,`SLAMeet2`,`SLAReturnDate`,`Week1` "
-    sql += " FROM `EakWServerDB`.`jobtackingbps` aa "
+    sql += " FROM `EakWServerDB`.`JobTackingBPS` aa "
     sql += " WHERE ImpFileName LIKE '" + pamFileName + "%' "
     sql += " AND DATE_FORMAT(RecordDateTime,'%Y-%m-%d') = '" + pamImpDate + "'"
     sql += " ON DUPLICATE KEY UPDATE  "
@@ -342,7 +353,7 @@ var insertJobImportBPS = (pamFileName, pamImpDate) => {
 }
 var insertDevice = (pamFileName, pamImpDate, pamDevType) => {
     let = sql = ""
-    sql += " INSERT INTO `EakWServerDB`.`DeviceBPS` (SerialNo, DeviceType, Model, UseStatus, StockName, WhereIsLast, Remark)"
+    sql += " INSERT INTO `EakWServerDB`.`DeviceBPS` (SerialNo, DeviceType, Model, UseStatus, StockName, WhereIsLast)"
     sql += " SELECT DISTINCT  "
     if (pamDevType == 'EDC') {
         sql += " aa.SerialNoEDC AS SerialNo, 'EDC' AS DeviceType,"
@@ -355,27 +366,24 @@ var insertDevice = (pamFileName, pamImpDate, pamDevType) => {
     } else {
         sql += " 'SerialNoXXXXX' AS SerialNo,'TMP' AS DeviceType,"
     }
-    sql += " aa.Model, 'Y' AS UseStatus, 'EakW-Asok' AS StockName, aa.LastStatus, aa.Remark2 "
-    sql += " FROM `EakWServerDB`.`jobtackingbps` AS aa "
+    sql += " aa.Model, 'Y' AS UseStatus, 'EakW-Asok' AS StockName, aa.LastStatus "
+    sql += " FROM `EakWServerDB`.`JobTackingBPS` AS aa "
     sql += " WHERE aa.ImpFileName LIKE '" + pamFileName + "%' "
     sql += " AND aa.SerialNoEDC IS NOT NULL "
-    sql += " AND aa.SerialNoEDC NOT LIKE  '%ERROR%'  "
+    sql += " AND aa.SerialNoEDC NOT LIKE  '%ERROR%'  " 
     sql += " AND DATE_FORMAT(aa.RecordDateTime,'%Y-%m-%d') = '" + pamImpDate + "'"
 
-    if (pamDevType = 'EDC') {
-        sql += " "
-    } else if (pamDevType = 'BASE') {
-        sql += " AND aa.SerialNoBase IS NOT NULL"
-    } else if (pamDevType = 'PIN') {
-        sql += " AND aa.SerialNoPinpad IS NOT NULL"
-    } else if (pamDevType = 'HUB') {
-        sql += " AND aa.SerialNoHub IS NOT NULL"
+    if (pamDevType == 'BASE') {
+        sql += " AND aa.SerialNoBase IS NOT NULL AND aa.SerialNoBase <> '' AND aa.SerialNoBase <> '-'"
+    } else if (pamDevType == 'PIN') {
+        sql += " AND aa.SerialNoPinpad IS NOT NULL AND aa.SerialNoPinpad <> '' AND aa.SerialNoPinpad <> '-'"
+    } else if (pamDevType == 'HUB') {
+        sql += " AND aa.SerialNoHub IS NOT NULL AND aa.SerialNoHub <> '' AND aa.SerialNoHub <> '-'"
     } else {
-        sql += " "
     }
 
     sql += " ON DUPLICATE KEY UPDATE  "
-    sql += " WhereIsLast = aa.LastStatus, Remark = aa.Remark"
+    sql += " WhereIsLast = aa.LastStatus"
     sql += " ;"
     return new Promise(function (resolve, reject) {
         connect.query(sql, (err, res) => {
@@ -397,7 +405,7 @@ var insertDeviceHistory = (pamFileName, pamImpDate, pamDevType) => {
     sql += "     `SerialNo`,`TID`,`DeviceType`,`TackDateTime`,`LastStatus`,`AdminName`,`TechnicName`,`Activity`)"
     sql += " SELECT SerialNoEDC AS SerialNo, TID, '" + pamDevType + "' AS DeviceType, RecordDateTime AS TackDateTime, "
     sql += " `LastStatus`, 'Tester' AS AdminName, TechnicName, NULL AS Activity"
-    sql += " FROM `EakWServerDB`.`jobTackingBPS`"
+    sql += " FROM `EakWServerDB`.`JobTackingBPS`"
     sql += " WHERE `ImpFileName` LIKE '" + pamFileName + "%' "
     sql += " AND `SerialNoEDC` IS NOT NULL "
     sql += " AND `SerialNoEDC` NOT LIKE  '%ERROR%'  "
@@ -419,7 +427,7 @@ var insertDeviceHistory = (pamFileName, pamImpDate, pamDevType) => {
 }
 
 var updateFileImport = (pamFileName, pamImpDate) => {
-    let sql = " UPDATE `EakWServerDB`.`importfilename` SET TrantoJobImport = 'Y' "
+    let sql = " UPDATE `EakWServerDB`.`ImportFileName` SET TrantoJobImport = 'Y' "
     sql += " WHERE ImpFileName LIKE '" + pamFileName + "' AND ImportDate = '" + pamImpDate + "';"
 
     return new Promise(function (resolve, reject) {

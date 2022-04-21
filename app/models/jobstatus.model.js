@@ -10,7 +10,7 @@ const JobStatus = function (param) {
 JobStatus.getAll = (result) => {
     let sql = "";
     sql += " SELECT JobType, JobStatus, COUNT(JobType) AS CountStatus"
-    sql += " FROM EakWServerDB.jobimport"
+    sql += " FROM EakWServerDB.Jobimport"
     sql += " WHERE MONTH(RecordDateTime) = 2"
     sql += " AND JobStatus IS NOT NULL "
     sql += " GROUP BY JobType, JobStatus;"
