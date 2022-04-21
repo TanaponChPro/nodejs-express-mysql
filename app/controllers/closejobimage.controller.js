@@ -38,9 +38,15 @@ const getListFiles = (req, res) => {
     // const baseUrl = req.boby.url;
     // console.log(req.hostname);
     // const imgfileName = "A1032100592_test01.png"
-    const baseUrl = 'http://127.0.0.1:8081/';
+
+    // const baseUrl = 'http://127.0.0.1:8081/'; 
+    // const baseUrl = 'http://139.5.147.247:8081/';
+    const baseUrl = 'http://' + req.hostname +':8081/';
+
     const directoryPath = __basedir + "/app/images/";
-    console.log(directoryPath);
+
+    console.log('url:'+ baseUrl +', path:' + directoryPath);
+
     fs.readdir(directoryPath, function (err, files) {
         if (err) {
             res.status(500).send({ message: "Unable to scan files!", });
@@ -61,12 +67,16 @@ const getListFiles = (req, res) => {
 const getImageFile = (req, res) => {
     // const baseUrl = req.boby.url;
     // console.log(req.hostname);
+    // const baseUrl = 'http://127.0.0.1:8081/';
+    // const baseUrl = 'http://139.5.147.247:8081/';
+    const baseUrl = 'http://' + req.hostname +':8081/';
+
     const imgJobNo = req.params.jobno;
-    const baseUrl = 'http://127.0.0.1:8081/';
     const directoryPath = __basedir + "/app/images/" + imgJobNo  + '/';
-    const imgDirectory = `${__basedir}` + `\\app\\images\\${imgJobNo}`;
-    
-    console.log(imgDirectory);
+    // const imgDirectory = `${__basedir}` + `\\app\\images\\${imgJobNo}`; // on window
+    const imgDirectory = `${__basedir}` + `/app/images/${imgJobNo}`; // on linux
+
+    console.log('url:'+ baseUrl +', path:' + directoryPath);
 
     let fileInfos = [];
 

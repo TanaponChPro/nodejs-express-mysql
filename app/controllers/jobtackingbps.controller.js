@@ -103,7 +103,7 @@ function sheetDetail(filePath, tmpFileName, tmpLoginName) {
                     row[40], row[41], row[42], row[43], row[44], row[45], row[46], row[47], row[48], row[49],
                     row[50], row[51], row[52], row[53], row[54], row[55], row[56], row[57], row[58], row[59],
                     row[60], row[61], row[62], row[63], row[64], row[65], row[66], row[67], row[68], row[69],
-                    tmpFileName, 'Sheet1', today, WhereIsLast
+                    tmpFileName, 'Sheet1', today, WhereIsLast, 'Import'
                 ]);
             }
         });
@@ -122,7 +122,7 @@ function sheetDetail(filePath, tmpFileName, tmpLoginName) {
         sql += " `AppointDate`,`AppointTime`,`PhonetoCustomerDate`,`PhonetoCustomerTime`,";
         sql += " `AppointResult`,`AppointCount`,`AppointUser`,`SLADateCount`,`SLAMeet1`,`SLAinstallEDC`,";
         sql += " `AppointDateCount`,`SLAMeet2`,`SLAReturnDate`,`Week1`,";
-        sql += " `ImpFileName`,`SheetName`,`RecordDateTime`,`LastStatus`"
+        sql += " `ImpFileName`,`SheetName`,`RecordDateTime`,`LastStatus`,`RecordStatus`"
         sql += ") VALUES  ? ";
         connect.query(sql, [jobtackings], (err, res) => {
             if (err) throw err;
@@ -261,8 +261,12 @@ var insertJobImportBPS = (pamFileName, pamImpDate) => {
     sql += " )"
     sql += " SELECT  `JobNo`,CONVERT(`DateOut`, DATE) AS `DateOut`,`MerchantID`,`MerchantName`,`LocationInstall`,"
     sql += "     CONVERT(`DefineInsDate`,DATE) AS `DefineInsDate`,`DefineInsTime`,"
-    sql += "     CONVERT(`PromotionStrDate`,DATE) AS `PromotionStrDate`,"
-    sql += "     CONVERT(`PromotionEndDate`,DATE) AS `PromotionEndDate`, "
+
+    // sql += "     CONVERT(`PromotionStrDate`,DATE) AS `PromotionStrDate`,"
+    sql += "     `PromotionStrDate`,"
+    // sql += "     CONVERT(`PromotionEndDate`,DATE) AS `PromotionEndDate`, "
+    sql += "     `PromotionEndDate`, "
+
     sql += "     `Vender`,`TID`,`SerialNoEDC`,`Model`,`ContactName`,`ContactPhone`,`ContactBranch`,`ContactBranchPhone`, `TID_MULTI`,"
     sql += "     `MERID_MULTI`,`TID_DCC`,`ORG_MERID_DCC`,`Line1`,`Line2`,`Line3`,`Remark`,`ReaderType`, `AssignTo`,`SerialNoPinpad`,"
     sql += "     `SerialNoBase`,`LinkPOS`,`SerialNoSam`,`SerialNoHub`,`VersionEDC`,`VersionPinpad`, `NoteBPS`,`BussinessGroup`,"
