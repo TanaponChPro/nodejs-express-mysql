@@ -73,10 +73,10 @@ const getImageFile = (req, res) => {
 
     const imgJobNo = req.params.jobno;
     const directoryPath = __basedir + "/app/images/" + imgJobNo  + '/';
-    // const imgDirectory = `${__basedir}` + `\\app\\images\\${imgJobNo}`; // on window
-    const imgDirectory = `${__basedir}` + `/app/images/${imgJobNo}`; // on linux
+    const imgDirectory = `${__basedir}` + `\\app\\images\\${imgJobNo}`; // on window
+    // const imgDirectory = `${__basedir}` + `/app/images/${imgJobNo}`; // on linux
 
-    console.log('url:'+ baseUrl +', path:' + directoryPath);
+    console.log('url:'+ baseUrl +', path:' + imgDirectory);
 
     let fileInfos = [];
 
@@ -99,7 +99,7 @@ const getImageFile = (req, res) => {
         
         files.forEach((file) => {
             // console.log(file + ': ' + file.substring(0,11) + ': '+ imgJobNo);
-            if (file.substring(0, 11) === imgJobNo) {
+            if (file.substring(0, 1) !== 'x') {
                 fileInfos.push({
                     name: file,
                     url0: baseUrl + 'api/closejobimg/files/' + file,

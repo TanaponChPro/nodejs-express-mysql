@@ -182,17 +182,17 @@ const UpdateCloseJob = async (req, res) => {
 var updCloseJob = (id, tmpCloseJob) => {
     let sql = "";
     sql += " UPDATE `EakWServerDB`.`tmpCloseJob` SET TID = ?, Bank = ?, SerialNoEDC = ?, TechnicName = ?,"
-    sql += " RecordDateTime = ?, TackDate = ?, UpdateDateTime = ?, JobType = ?, JobStatus = ?, "
+    sql += " TackDate = ?, UpdateDateTime = ?, JobType = ?, JobStatus = ?, "
     sql += " Remark = ?, PhoneNo = ?, Merchant = ?, OldSerialNoEDC = ?, CustomerName = ?, "
-    sql += " CustomerPhoneNo = ?, InputFileName = ?  WHERE ID = ?;";
+    sql += " CustomerPhoneNo = ?  WHERE ID = ?;";
 
     return new Promise(function (resolve, reject) {
         connect.connect(() => {
             connect.query(sql, [tmpCloseJob.TID,
-            tmpCloseJob.Bank, tmpCloseJob.SerialNoEDC, tmpCloseJob.TechnicName, tmpCloseJob.RecordDateTime,
+            tmpCloseJob.Bank, tmpCloseJob.SerialNoEDC, tmpCloseJob.TechnicName, 
             tmpCloseJob.TackDate, tmpCloseJob.UpdateDateTime, tmpCloseJob.JobType, tmpCloseJob.JobStatus,
             tmpCloseJob.Remark, tmpCloseJob.PhoneNo, tmpCloseJob.Merchant, tmpCloseJob.OldSerialNoEDC,
-            tmpCloseJob.CustomerName, tmpCloseJob.CustomerPhoneNo, tmpCloseJob.InputFileName, id
+            tmpCloseJob.CustomerName, tmpCloseJob.CustomerPhoneNo, id
             ],
                 (err, result) => {
                     if (err) {

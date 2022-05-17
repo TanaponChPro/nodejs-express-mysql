@@ -1,6 +1,7 @@
 const connect = require("../models/db.js");
 const readXlsxFile = require("read-excel-file/node");
 const jobimportbps = require("../models/jobimportbps.model.js");
+const fs = require('fs');
 
 const uploadexcelbps = async (req, res) => {
     try {
@@ -89,8 +90,8 @@ function sheetDetail(filePath, tmpFileName, tmpLoginName) {
                     tmpInsDate = xlx.toISOString().slice(0, 10)
                 }
 
-                JobType = temp[5];
-                JobStatus = temp[6];
+                JobType = (temp[5] === null) ? '-' : temp[5];
+                JobStatus = (temp[6] === null) ? '-' : temp[6];
                 WhereIsLast = setWhereIsLast(JobType, JobStatus);
                 // console.log('jobtype: ' + JobType + '| jobstatus: ' + JobStatus + '|WhereIsLast: ' + WhereIsLast);
 
@@ -132,11 +133,19 @@ function sheetDetail(filePath, tmpFileName, tmpLoginName) {
 };
 
 const getJobImportBPS = (req, res) => {
-
+    // console.log(req.params.sdate);
+    // console.log(req.params.edate);
     let sql = "SELECT *, DATE_FORMAT(DateOut,'%Y-%m-%d') as DateOut, ";
     sql += " DATE_FORMAT(DefineInsDate ,'%Y-%m-%d') as  DefineInsDate, DATE_FORMAT(OperationDate,'%Y-%m-%d') as OperationDate, ";
     sql += " DATE_FORMAT(AppointDate ,'%Y-%m-%d') as  AppointDate, DATE_FORMAT(PhonetoCustomerDate,'%Y-%m-%d') as PhonetoCustomerDate ";
-    sql += " FROM `EakWServerDB`.`JobImportBPS`;";
+    sql += " FROM `EakWServerDB`.`JobImportBPS`";
+
+    if (req.params.sdate !== '0') {
+        sql += " WHERE  DefineInsDate BETWEEN  '" + req.params.sdate + "'";
+        sql += " AND   '" + req.params.edate + "'";
+    }
+    sql += ";";
+
     // let sql = "SELECT * FROM `EakWServerDB`.`JobTackingBPS`";
     connect.query(sql, function (err, data, fields) {
         if (err) throw err;
@@ -188,7 +197,6 @@ function setWhereIsLast(tmpType, tmpStatus) {
 }
 
 /*----------------------------------------------------- Back-End Section ---------------------------------------------------*/
-
 const ProcessRunBackend = async (req, res) => {
     try {
         let = sql = ""
@@ -272,7 +280,7 @@ var insertJobImportBPS = (pamFileName, pamImpDate) => {
     sql += "     `SerialNoBase`,`LinkPOS`,`SerialNoSam`,`SerialNoHub`,`VersionEDC`,`VersionPinpad`, `NoteBPS`,`BussinessGroup`,"
     sql += "     `ProjectType`,`JobType`,`Province`,`BKK_UPC`,`SLAStatus`,`Bank`, "
 
-//    sql += "     STR_TO_DATE(`OperationDate`,'%Y-%m-%d') AS `OperationDate`,"
+    //    sql += "     STR_TO_DATE(`OperationDate`,'%Y-%m-%d') AS `OperationDate`,"
     sql += "     if(cast(substr(`OperationDate`,1,2) AS UNSIGNED) > 20, null, SUBSTRING_INDEX(`OperationDate`, ' ', 1)) AS `OperationDate`,"
     sql += "     `OperationTime`,"
 
@@ -374,7 +382,7 @@ var insertDevice = (pamFileName, pamImpDate, pamDevType) => {
     sql += " FROM `EakWServerDB`.`JobTackingBPS` AS aa "
     sql += " WHERE aa.ImpFileName LIKE '" + pamFileName + "%' "
     sql += " AND aa.SerialNoEDC IS NOT NULL "
-    sql += " AND aa.SerialNoEDC NOT LIKE  '%ERROR%'  " 
+    sql += " AND aa.SerialNoEDC NOT LIKE  '%ERROR%'  "
     sql += " AND DATE_FORMAT(aa.RecordDateTime,'%Y-%m-%d') = '" + pamImpDate + "'"
 
     if (pamDevType == 'BASE') {
@@ -471,6 +479,183 @@ const updateFromPage = async (req, res) => {
             }
         } else res.send(data);
     });
+}
+
+const fse = require('fs-extra');
+/*----------------------------------- Transfer temp JobNo to real JobNo Section ---------------------------------------------*/
+const tranTempJobNo2RealJobNo = async (req, res) => {
+    // Validate request
+    if (!req.body) {
+        res.status(400).send({
+            message: "Content can not be empty!"
+        });
+    }
+
+    // console.log(req.body);
+    tmpCloseJob = {
+        JobNo: req.body.JobNo,
+        RealJobNo: req.body.RealJobNo,
+        TID: req.body.TID,
+        Bank: req.body.Bank,
+        SerialNoEDC: req.body.SerialNoEDC,
+        TechnicName: req.body.TechnicName,
+        RecordDateTime: req.body.RecordDateTime,
+        TackDate: req.body.TackDate,
+        UpdateDateTime: req.body.UpdateDateTime,
+        JobType: req.body.JobType,
+        JobStatus: req.body.JobStatus,
+        Remark: req.body.Remark,
+        PhoneNo: req.body.PhoneNo,
+        Merchant: req.body.Merchant,
+        OldSerialNoEDC: req.body.OldSerialNoEDC,
+        CustomerName: req.body.CustomerName,
+        CustomerPhoneNo: req.body.CustomerPhoneNo,
+        InputFileName: req.body.InputFileName
+    };
+    var jobstatus;
+    try {
+        jobstatus = await insertJobImportBPS_fromCloseJob(tmpCloseJob)
+        res.send(jobstatus);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).send({ message: "Error select JobStatus: " });
+    }
+}
+
+var insertJobImportBPS_fromCloseJob = (tmpCloseJob) => {
+    let today = new Date();
+    let sql = "";
+    sql = `INSERT INTO EakWServerDB.JobImportBPS (JobNo, 
+        DefineInsDate,
+        DefineInsTime,
+        MerchantID,
+        TID,
+        SerialNoEDC,
+        ContactName,
+        ContactPhone,
+        ContactBranchPhone,
+        Bank,
+        JobType,
+        JobStatus,
+        OperationDate,
+        OperationTime,
+        CustomerName,
+        CustomerPhone,
+        TechnicName,
+        Remark2,
+        ReturnDate,
+        TempJobNo,
+        UpdateDateTime
+    ) VALUES (
+        '${tmpCloseJob.RealJobNo}',
+        '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
+        '${tmpCloseJob.RecordDateTime.split(' ')[1]}',
+        '${tmpCloseJob.Merchant}',
+        '${tmpCloseJob.TID}',
+        '${tmpCloseJob.SerialNoEDC}',
+        '${tmpCloseJob.CustomerName}',
+        '${tmpCloseJob.CustomerPhoneNo}',
+        '${tmpCloseJob.PhoneNo}',
+        '${tmpCloseJob.Bank}',
+        '${tmpCloseJob.JobType}',
+        '${tmpCloseJob.JobStatus}',
+        '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
+        '${tmpCloseJob.RecordDateTime.split(' ')[1]}',
+        '${tmpCloseJob.CustomerName}',
+        '${tmpCloseJob.CustomerPhoneNo}',
+        '${tmpCloseJob.TechnicName}',
+        '${tmpCloseJob.Remark}',
+        '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
+        '${tmpCloseJob.JobNo}',
+        '${today.toISOString()}'
+    )
+    ON DUPLICATE KEY UPDATE
+        SerialNoEDC = '${tmpCloseJob.SerialNoEDC}',
+        ContactName = '${tmpCloseJob.CustomerName}',
+        ContactPhone = '${tmpCloseJob.CustomerPhoneNo}',
+        ContactBranchPhone = '${tmpCloseJob.PhoneNo}',
+        JobType = '${tmpCloseJob.JobType}',
+        JobStatus = '${tmpCloseJob.JobStatus}',
+        OperationDate = '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
+        OperationTime = '${tmpCloseJob.RecordDateTime.split(' ')[1]}',
+        CustomerName = '${tmpCloseJob.CustomerName}',
+        CustomerPhone = '${tmpCloseJob.CustomerPhoneNo}',
+        TechnicName = '${tmpCloseJob.TechnicName}',
+        Remark = '${tmpCloseJob.Remark}',
+        ReturnDate = '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
+        TempJobNo = '${tmpCloseJob.JobNo}',
+        UpdateDateTime = '${today.toISOString()}'
+    ;`;
+    console.log(sql);
+
+    return new Promise(function (resolve, reject) {
+        connect.connect(() => {
+            connect.query(sql, (err, result) => {
+                if (err) {
+                    console.log(err);
+                    return reject(err);
+                }
+
+                if (result == null) {
+                    return reject({ message: "Mysql Error" });
+                }
+                resolve({ message: "Insert data complete" });
+            })
+        })
+    });
+}
+
+const copyImageTempJobNo2RealJobNo = (req, res) => {
+    // console.log(req.params.tjobno);
+    // console.log(req.params.rjobno);
+    const tempjobno = req.params.tjobno;
+    const realjobno = req.params.rjobno;
+    const tempdir = __basedir + "\\app\\images\\" + tempjobno;
+    const realdir = __basedir + "\\app\\images\\" + realjobno;
+
+    let fileInfos = [];
+    if (fs.existsSync(tempdir)) {
+        if (!fs.existsSync(realdir)) {
+            fs.mkdirSync(realdir, { recursive: true });
+        }
+
+        fse.copy(tempdir, realdir, function (err) {
+            if (err) {                 
+              return console.error(err);     
+            } else {
+              console.log('Copy completed!');
+            }
+        });
+        let newfilename;
+        let oldfilename;
+        let tmpName;
+        let lngth;
+        var directoryPath = __basedir + "/app/images/" + realjobno + "/";
+        console.log(directoryPath);
+        fs.readdir(realdir, (err, files) => {
+            if (err) {
+                return res.status(500).send({ message: "Unable to scan files!", });
+            }
+            files.forEach((file) => {
+                console.log(directoryPath +file);
+                oldfilename = directoryPath + file;
+                tmpName = file.split("_");
+                lngth = tmpName.length;
+                console.log(directoryPath + realjobno + '_' + tmpName[lngth-1]);
+                newfilename = directoryPath + realjobno + '_' + tmpName[lngth - 1];
+                fs.rename(oldfilename, newfilename, function (err) {
+                    if (err) {
+                        return res.status(500).send({ message: "Unable to scan files!" });
+                    }
+                });
+            });
+            console.log('File Renamed.');
+            res.status(200).send({ message: "File Renamed.!" });
+        });
+
+
+    }
 
 }
 module.exports = {
@@ -478,7 +663,9 @@ module.exports = {
     getJobImportBPS,
     welcome,
     ProcessRunBackend,
-    updateFromPage
+    updateFromPage,
+    tranTempJobNo2RealJobNo,
+    copyImageTempJobNo2RealJobNo
 };
 
 

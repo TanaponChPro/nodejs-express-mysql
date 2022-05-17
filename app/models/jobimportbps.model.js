@@ -80,20 +80,22 @@ JobImportBPS.updateById = (id, jobimport, result) => {
     // sql += "     `DefineInsTime` = ?, "
     // sql += "     `PromotionStrDate`= ?,"
     // sql += "     `PromotionEndDate`= ?,"
-    // sql += "     `SerialNoEDC`= ?,"
-    // sql += "     `Model`= ?,"
-    // sql += "     `ContactName`= ?,"
-    // sql += "     `ContactPhone`= ?,"
-    // sql += "     `ContactBranch`= ?,"
-    // sql += "     `ContactBranchPhone`= ?,"
-    // sql += "     `SerialNoPinpad`= ?,"
-    // sql += "     `SerialNoBase`= ?,"
-    // sql += "     `LinkPOS`= ?,"
-    // sql += "     `SerialNoSam`= ?, "
-    // sql += "     `SerialNoHub`= ?,"
-    // sql += "     `VersionEDC`= ?,"
-    // sql += "     `VersionPinpad`= ?,"
-    // sql += "     `NoteBPS`= ?,"
+
+    sql += "     `SerialNoEDC`= ?,"
+    sql += "     `Model`= ?,"
+    sql += "     `ContactName`= ?,"
+    sql += "     `ContactPhone`= ?,"
+    sql += "     `ContactBranch`= ?,"
+    sql += "     `ContactBranchPhone`= ?,"
+
+    sql += "     `SerialNoPinpad`= ?,"
+    sql += "     `SerialNoBase`= ?,"
+    sql += "     `LinkPOS`= ?,"
+    sql += "     `SerialNoSam`= ?, "
+    sql += "     `SerialNoHub`= ?,"
+    sql += "     `VersionEDC`= ?,"
+    sql += "     `VersionPinpad`= ?,"
+    sql += "     `NoteBPS`= ?,"
 
     sql += "     `OperationDate`= ?,"
     sql += "     `OperationTime`= ?,"
@@ -116,15 +118,15 @@ JobImportBPS.updateById = (id, jobimport, result) => {
     sql += "     `PhonetoCustomerTime`= ?,"
     sql += "     `AppointResult`= ?,"
     sql += "     `AppointCount`= ?,"
-    sql += "     `AppointUser`= ?"
+    sql += "     `AppointUser`= ?,"
 
-    // sql += "     `SLADateCount`= ?,"
-    // sql += "     `SLAMeet1`= ?,"
-    // sql += "     `SLAinstallEDC`= ?,"
-    // sql += "     `AppointDateCount`= ?,"
-    // sql += "     `SLAMeet2`= ?,"
-    // sql += "     `SLAReturnDate`= ?,"
-    // sql += "     `Week1` = ?"
+    sql += "     `SLADateCount`= ?,"
+    sql += "     `SLAMeet1`= ?,"
+    sql += "     `SLAinstallEDC`= ?,"
+    sql += "     `AppointDateCount`= ?,"
+    sql += "     `SLAMeet2`= ?,"
+    sql += "     `SLAReturnDate`= ?,"
+    sql += "     `Week1` = ?"
     // sql += "     `ImageFile` = ?"
     sql += " WHERE id = ?;";
     connDB.query(
@@ -142,12 +144,12 @@ JobImportBPS.updateById = (id, jobimport, result) => {
         //     jobimport.PromotionEndDate,
         //     jobimport.Vender,
         //     jobimport.TID,
-        //     jobimport.SerialNoEDC,
-        //     jobimport.Model,
-        //     jobimport.ContactName,
-        //     jobimport.ContactPhone,
-        //     jobimport.ContactBranch,
-        //     jobimport.ContactBranchPhone,
+            jobimport.SerialNoEDC,
+            jobimport.Model,
+            jobimport.ContactName,
+            jobimport.ContactPhone,
+            jobimport.ContactBranch,
+            jobimport.ContactBranchPhone,
         //     jobimport.TID_MULTI,
         //     jobimport.MERID_MULTI,
         //     jobimport.TID_DCC,
@@ -158,14 +160,16 @@ JobImportBPS.updateById = (id, jobimport, result) => {
         //     jobimport.Remark,
         //     jobimport.ReaderType,
         //     jobimport.AssignTo,
-        //     jobimport.SerialNoPinpad,
-        //     jobimport.SerialNoBase,
-        //     jobimport.LinkPOS,
-        //     jobimport.SerialNoSam,
-        //     jobimport.SerialNoHub,
-        //     jobimport.VersionEDC,
-        //     jobimport.VersionPinpad,
-        //     jobimport.NoteBPS,
+
+            jobimport.SerialNoPinpad,
+            jobimport.SerialNoBase,
+            jobimport.LinkPOS,
+            jobimport.SerialNoSam,
+            jobimport.SerialNoHub,
+
+            jobimport.VersionEDC,
+            jobimport.VersionPinpad,
+            jobimport.NoteBPS,
         //     jobimport.BussinessGroup,
         //     jobimport.ProjectType,
         //     jobimport.JobType,
@@ -197,13 +201,13 @@ JobImportBPS.updateById = (id, jobimport, result) => {
             jobimport.AppointCount,
             jobimport.AppointUser,
 
-            // jobimport.SLADateCount,
-            // jobimport.SLAMeet1,
-            // jobimport.SLAinstallEDC,
-            // jobimport.AppointDateCount,
-            // jobimport.SLAMeet2,
-            // jobimport.SLAReturnDate,
-            // jobimport.Week1,
+            jobimport.SLADateCount,
+            jobimport.SLAMeet1,
+            jobimport.SLAinstallEDC,
+            jobimport.AppointDateCount,
+            jobimport.SLAMeet2,
+            jobimport.SLAReturnDate,
+            jobimport.Week1,
             // jobimport.ImageFile,
             id
         ],
