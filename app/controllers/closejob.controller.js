@@ -1,4 +1,5 @@
 const connect = require("../models/db.js");
+const fs = require('fs');
 
 const JobStatus = async (req, res) => {
     var jobstatus;
@@ -37,28 +38,24 @@ var getCloseJobAll = (id) => {
     sql += " SELECT * FROM `EakWServerDB`.`tmpCloseJob`"
 
     if (id) {
-        sql += " WHERE ID = "+ id + ";";
+        sql += " WHERE ID = " + id + ";";
     }
 
     return new Promise(function (resolve, reject) {
         connect.connect(() => {
             //รันคำสั่ง SQL
             connect.query(sql, (err, result) => {
-
                 if (err) {
                     console.log(err);
                     return reject(err);
                 }
-
                 if (result == null) {
                     return reject({ message: "Mysql Error" });
                 }
                 //ส่งผลลัพธืของคำสั่ง sql กลับไปให้ทำงานต่อ
                 resolve(JSON.stringify(result));
             })
-
         });
-
     });
 }
 
@@ -114,9 +111,13 @@ const CreateCloseJob = async (req, res) => {
         InputFileName: req.body.InputFileName
     };
 
-    var jobstatus;
+    let jobstatus;
+    let dir = __basedir + "/app/images/" + req.body.JobNo;
     try {
         jobstatus = await insertCloseJob(tmpCloseJob)
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir);
+        }
         res.send(jobstatus);
     } catch (err) {
         console.log(err);
@@ -189,22 +190,21 @@ var updCloseJob = (id, tmpCloseJob) => {
     return new Promise(function (resolve, reject) {
         connect.connect(() => {
             connect.query(sql, [tmpCloseJob.TID,
-            tmpCloseJob.Bank, tmpCloseJob.SerialNoEDC, tmpCloseJob.TechnicName, 
+            tmpCloseJob.Bank, tmpCloseJob.SerialNoEDC, tmpCloseJob.TechnicName,
             tmpCloseJob.TackDate, tmpCloseJob.UpdateDateTime, tmpCloseJob.JobType, tmpCloseJob.JobStatus,
             tmpCloseJob.Remark, tmpCloseJob.PhoneNo, tmpCloseJob.Merchant, tmpCloseJob.OldSerialNoEDC,
             tmpCloseJob.CustomerName, tmpCloseJob.CustomerPhoneNo, id
             ],
-                (err, result) => {
-                    if (err) {
-                        console.log(err);
-                        return reject(err);
-                    }
-
-                    if (result == null) {
-                        return reject({ message: "Mysql Error" });
-                    }
-                    resolve({ message: "Update finish job complete" });
-                })
+            (err, result) => {
+                if (err) {
+                    console.log(err);
+                    return reject(err);
+                }
+                if (result == null) {
+                    return reject({ message: "Mysql Error" });
+                }
+                resolve({ message: "Update finish job complete" });
+            })
         })
     });
 }
@@ -248,7 +248,7 @@ const UploadImage = async (req, res) => {
         // console.log(req.file.originalname);
 
         let orgFileName = req.file.originalname;
-        res.status(200).send({ message: "upload file to database complete!" + orgFileName});
+        res.status(200).send({ message: "upload file to database complete!" + orgFileName });
 
     } catch (error) {
         console.log(error);

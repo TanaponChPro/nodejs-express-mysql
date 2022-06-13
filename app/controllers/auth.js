@@ -1,8 +1,10 @@
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const randtoken = require('rand-token');
 const connect = require("../models/db.js");
 const User = require('../models/user');
+const refreshTokens = {};
 
 exports.signup = async (req, res, next) => {
   const errors = validationResult(req);
@@ -36,8 +38,9 @@ exports.signup = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-  const email = req.body.email;
-  const password = req.body.password;
+  // const email = req.body.email;
+  // const password = req.body.password;
+  const {email, password} = req.body;
   // console.log('email: '+email +', password: '+password);
 
   try {
@@ -51,6 +54,7 @@ exports.login = async (req, res, next) => {
 
     const storedUser = user[0][0];
     const isEqual = await bcrypt.compare(password, storedUser.password);
+    // console.log(storedUser);
 
     if (!isEqual) {
       const error = new Error('Wrong password!');
@@ -67,7 +71,18 @@ exports.login = async (req, res, next) => {
       'secretfortoken',
       { expiresIn: '1h' }
     );
-    res.status(200).json({ token: token, userId: storedUser.id, roleId: storedUser.role });
+    const refreshToken = randtoken.uid(256);
+    refreshTokens[refreshToken] = email;
+
+    res.status(200).json(
+      { token: token, 
+        refreshToken: refreshToken,
+        userId: storedUser.id, 
+        userrole: storedUser.role,
+        username: storedUser.name,
+        email: storedUser.email
+      }
+    );
   } catch (err) {
     if (!err.statusCode) {
       err.statusCode = 500;
@@ -75,6 +90,44 @@ exports.login = async (req, res, next) => {
     next(err);
   }
 };
+exports.logout = async (req, res, next) => {
+  const refreshToken = req.body.refreshToken;
+  if (refreshToken in refreshTokens) { 
+    delete refreshTokens[refreshToken];
+  } 
+  res.sendStatus(204); 
+};
+exports.refresh = async (req, res, next) => {
+  const refreshToken = req.body.refreshToken;
+  
+  if (refreshToken in refreshTokens) {
+    // const user = {
+    //   'username': refreshTokens[refreshToken],
+    //   'role': 'admin'
+    // }
+    // const token = jwt.sign(user, SECRET, { expiresIn: 600 });
+    // res.json({jwt: token})
+
+    //modify
+    // console.log(refreshTokens[refreshToken]);
+    const email = refreshTokens[refreshToken];
+    const user = await User.find(email);
+    const storedUser = user[0][0];
+    const token = jwt.sign(
+      {
+        email: storedUser.email,
+        userId: storedUser.id,
+        role: storedUser.role
+      },
+      'secretfortoken',
+      { expiresIn: '1h' }
+    );
+    res.json({token: token})
+  }
+  else {
+    res.sendStatus(401);
+  }
+}
 
 //code temple 1
 exports.GetMenuList = async (req, res, next) => {

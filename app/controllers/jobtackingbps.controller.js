@@ -133,20 +133,39 @@ function sheetDetail(filePath, tmpFileName, tmpLoginName) {
 };
 
 const getJobImportBPS = (req, res) => {
-    // console.log(req.params.sdate);
-    // console.log(req.params.edate);
-    let sql = "SELECT *, DATE_FORMAT(DateOut,'%Y-%m-%d') as DateOut, ";
-    sql += " DATE_FORMAT(DefineInsDate ,'%Y-%m-%d') as  DefineInsDate, DATE_FORMAT(OperationDate,'%Y-%m-%d') as OperationDate, ";
-    sql += " DATE_FORMAT(AppointDate ,'%Y-%m-%d') as  AppointDate, DATE_FORMAT(PhonetoCustomerDate,'%Y-%m-%d') as PhonetoCustomerDate ";
-    sql += " FROM `EakWServerDB`.`JobImportBPS`";
+    // console.log(req.body);
+    let condi_seq = 0;
+    let sql = `SELECT *, DATE_FORMAT(DateOut,'%Y-%m-%d') as DateOut,
+        DATE_FORMAT(DefineInsDate ,'%Y-%m-%d') as  DefineInsDate, 
+        DATE_FORMAT(OperationDate,'%Y-%m-%d') as OperationDate,
+        DATE_FORMAT(AppointDate ,'%Y-%m-%d') as  AppointDate, 
+        DATE_FORMAT(PhonetoCustomerDate,'%Y-%m-%d') as PhonetoCustomerDate 
+            FROM EakWServerDB.JobImportBPS `;
 
-    if (req.params.sdate !== '0') {
-        sql += " WHERE  DefineInsDate BETWEEN  '" + req.params.sdate + "'";
-        sql += " AND   '" + req.params.edate + "'";
+    if (req.body.strDate !== null) {
+        sql += `WHERE DefineInsDate BETWEEN '${req.body.strDate}' AND  '${req.body.endDate}' `;  
+        condi_seq++;
     }
-    sql += ";";
+    if (req.body.Bank !== null) {
+        sql += (condi_seq == 0) ? `WHERE Bank = '${req.body.Bank}'` : ` AND Bank = '${req.body.Bank}'`;
+        condi_seq++;
+    }
+    if (req.body.bkkupc !== null) {
+        sql += (condi_seq == 0) ? `WHERE BKK_UPC = '${req.body.bkkupc}'` : ` AND BKK_UPC = '${req.body.bkkupc}'`;
+        condi_seq++;
+    }
+    if (req.body.jobstatus !== null) {
+        sql += (condi_seq == 0) ? `WHERE JobStatus = '${req.body.jobstatus}'` : ` AND JobStatus = '${req.body.jobstatus}'`;
+        condi_seq++;
+    }
+    if (req.body.jobtype !== null) {
+        let tmp = req.body.jobtype.slice(0,2);
+        sql += (condi_seq == 0) ? `WHERE JobType LIKE '${tmp}%'` : ` AND JobType LIKE '${tmp}%'`;
+        condi_seq++;
+    }
+    sql += ` ORDER BY ID DESC;`;
 
-    // let sql = "SELECT * FROM `EakWServerDB`.`JobTackingBPS`";
+    // console.log(sql);
     connect.query(sql, function (err, data, fields) {
         if (err) throw err;
         res.send(data);
@@ -491,7 +510,7 @@ const tranTempJobNo2RealJobNo = async (req, res) => {
         });
     }
 
-    // console.log(req.body);
+    console.log(req.body);
     tmpCloseJob = {
         JobNo: req.body.JobNo,
         RealJobNo: req.body.RealJobNo,
@@ -548,44 +567,44 @@ var insertJobImportBPS_fromCloseJob = (tmpCloseJob) => {
         TempJobNo,
         UpdateDateTime
     ) VALUES (
-        '${tmpCloseJob.RealJobNo}',
-        '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
-        '${tmpCloseJob.RecordDateTime.split(' ')[1]}',
-        '${tmpCloseJob.Merchant}',
-        '${tmpCloseJob.TID}',
-        '${tmpCloseJob.SerialNoEDC}',
-        '${tmpCloseJob.CustomerName}',
-        '${tmpCloseJob.CustomerPhoneNo}',
-        '${tmpCloseJob.PhoneNo}',
-        '${tmpCloseJob.Bank}',
-        '${tmpCloseJob.JobType}',
-        '${tmpCloseJob.JobStatus}',
-        '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
-        '${tmpCloseJob.RecordDateTime.split(' ')[1]}',
-        '${tmpCloseJob.CustomerName}',
-        '${tmpCloseJob.CustomerPhoneNo}',
-        '${tmpCloseJob.TechnicName}',
-        '${tmpCloseJob.Remark}',
-        '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
-        '${tmpCloseJob.JobNo}',
-        '${today.toISOString()}'
+        "${tmpCloseJob.RealJobNo}",
+        "${tmpCloseJob.RecordDateTime.split(' ')[0]}",
+        "${tmpCloseJob.RecordDateTime.split(' ')[1]}",
+        "${tmpCloseJob.Merchant}",
+        "${tmpCloseJob.TID}",
+        "${tmpCloseJob.SerialNoEDC}",
+        "${tmpCloseJob.CustomerName}",
+        "${tmpCloseJob.CustomerPhoneNo}",
+        "${tmpCloseJob.PhoneNo}",
+        "${tmpCloseJob.Bank}",
+        "${tmpCloseJob.JobType}",
+        "${tmpCloseJob.JobStatus}",
+        "${tmpCloseJob.RecordDateTime.split(' ')[0]}",
+        "${tmpCloseJob.RecordDateTime.split(' ')[1]}",
+        "${tmpCloseJob.CustomerName}",
+        "${tmpCloseJob.CustomerPhoneNo}",
+        "${tmpCloseJob.TechnicName}",
+        "${tmpCloseJob.Remark}",
+        "${tmpCloseJob.RecordDateTime.split(' ')[0]}",
+        "${tmpCloseJob.JobNo}",
+        "${today.toISOString()}"
     )
     ON DUPLICATE KEY UPDATE
-        SerialNoEDC = '${tmpCloseJob.SerialNoEDC}',
-        ContactName = '${tmpCloseJob.CustomerName}',
-        ContactPhone = '${tmpCloseJob.CustomerPhoneNo}',
-        ContactBranchPhone = '${tmpCloseJob.PhoneNo}',
-        JobType = '${tmpCloseJob.JobType}',
-        JobStatus = '${tmpCloseJob.JobStatus}',
-        OperationDate = '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
-        OperationTime = '${tmpCloseJob.RecordDateTime.split(' ')[1]}',
-        CustomerName = '${tmpCloseJob.CustomerName}',
-        CustomerPhone = '${tmpCloseJob.CustomerPhoneNo}',
-        TechnicName = '${tmpCloseJob.TechnicName}',
-        Remark = '${tmpCloseJob.Remark}',
-        ReturnDate = '${tmpCloseJob.RecordDateTime.split(' ')[0]}',
-        TempJobNo = '${tmpCloseJob.JobNo}',
-        UpdateDateTime = '${today.toISOString()}'
+        SerialNoEDC = "${tmpCloseJob.SerialNoEDC}",
+        ContactName = "${tmpCloseJob.CustomerName}",
+        ContactPhone = "${tmpCloseJob.CustomerPhoneNo}",
+        ContactBranchPhone = "${tmpCloseJob.PhoneNo}",
+        JobType = "${tmpCloseJob.JobType}",
+        JobStatus = "${tmpCloseJob.JobStatus}",
+        OperationDate = "${tmpCloseJob.RecordDateTime.split(' ')[0]}",
+        OperationTime = "${tmpCloseJob.RecordDateTime.split(' ')[1]}",
+        CustomerName = "${tmpCloseJob.CustomerName}",
+        CustomerPhone = "${tmpCloseJob.CustomerPhoneNo}",
+        TechnicName = "${tmpCloseJob.TechnicName}",
+        Remark = "${tmpCloseJob.Remark}",
+        ReturnDate = "${tmpCloseJob.RecordDateTime.split(' ')[0]}",
+        TempJobNo = "${tmpCloseJob.JobNo}",
+        UpdateDateTime = "${today.toISOString()}"
     ;`;
     console.log(sql);
 
@@ -596,7 +615,6 @@ var insertJobImportBPS_fromCloseJob = (tmpCloseJob) => {
                     console.log(err);
                     return reject(err);
                 }
-
                 if (result == null) {
                     return reject({ message: "Mysql Error" });
                 }

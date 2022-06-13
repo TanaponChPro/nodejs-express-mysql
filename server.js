@@ -57,6 +57,7 @@ app.use('/images', express.static('app/images'));
 require("./app/routes/auth.js")(app);
 require("./app/routes/tutorial.routes.js")(app);
 require("./app/routes/band.routes.js")(app);
+require("./app/routes/bank.routes.js")(app);
 require("./app/routes/customer.routes.js")(app);
 require("./app/routes/importfilename.routes.js")(app);
 require("./app/routes/jobtacking.routes.js")(app);

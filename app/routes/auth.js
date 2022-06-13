@@ -48,6 +48,8 @@ let routes = (app) => {
   );
   router.get('/getmenu/:role',authController.GetMenubyRole);
   router.post('/getmenulist/:role', authController.GetMenuList);
+  router.post('/logout', authController.logout);
+  router.post('/refresh', authController.refresh);
   app.use('/api', router);
 }
 module.exports = routes;
